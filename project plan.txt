@@ -1,0 +1,147 @@
+Project Plan: Simple Wholesale Management App (PHP & Tailwind CSS)
+This document outlines the complete plan, database structure, and file architecture for the mobile-first wholesale management web app using PHP, HTML, JavaScript, and Tailwind CSS.
+
+1. Core Technology Stack (Revised)
+Backend & Templating: PHP. It will handle all server-side logic, database interactions, and directly generate the HTML pages for the user's browser.
+
+Database: MySQL / MariaDB.
+
+Styling: Tailwind CSS. We will use the CDN link in the header for simplicity, which makes setup instant. A style.css file can be used for any custom styles.
+
+Client-side Scripting: Vanilla JavaScript. For front-end interactivity, form validation, and making asynchronous requests (AJAX) when a full page reload isn't necessary.
+
+This approach is known as a Multi-Page Application (MPA), where each distinct view is a separate .php file.
+
+2. Database Structure (MySQL)
+(This structure remains unchanged as it is independent of the technology stack.)
+
+The database will be named wholesale_db. All inventory is stored in the smallest unit (pcs) to ensure accuracy.
+
+-- Table: users
+-- Stores login information and hierarchy for all staff.
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL, -- Never store plain text passwords
+    role ENUM('owner', 'manager', 'supervisor', 'head', 'sales') NOT NULL,
+    reports_to INT NULL, -- The 'id' of this user's direct superior. NULL for the owner.
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reports_to) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Table: products
+-- Stores product information. Starting with one product.
+CREATE TABLE products (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    price_per_pc DECIMAL(10, 2) NOT NULL
+);
+
+-- Table: inventory
+-- Tracks the total stock available for each product.
+CREATE TABLE inventory (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL UNIQUE,
+    quantity_in_pcs BIGINT NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Table: orders
+-- A record for every sale made.
+CREATE TABLE orders (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    customer_name VARCHAR(100) NOT NULL,
+    customer_phone VARCHAR(20),
+    total_pcs INT NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    status ENUM('Pending', 'Completed', 'Cancelled') NOT NULL DEFAULT 'Pending',
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+3. User Roles, Hierarchy, & Permissions
+(This logic remains unchanged.)
+
+Super Admin (Role: owner): Full control.
+
+Admin (Role: manager): Can manage supervisor, head, sales.
+
+Supervisor (Role: supervisor): Can manage head, sales.
+
+Sales Team Head (Role: head): Can manage sales.
+
+Sales Team Member (Role: sales): Can only manage their own orders.
+
+4. Core Business Logic: Stock Calculation
+(This logic remains unchanged and will be implemented in PHP.)
+
+Constants: 1 Carton = 10 Pcs, 1 Crate = 50 Cartons = 500 Pcs.
+
+Order Creation Formula: total_pcs = (crates * 500) + (cartons * 10) + pcs.
+
+Display Logic: Convert total pcs from the database back into Crates, Cartons, and Pcs for display.
+
+5. Folder & File Structure (Revised for PHP)
+This structure merges the frontend and backend into a single project, which is typical for traditional PHP applications.
+
+/ (project root)
+├── login.php             # Login page
+├── logout.php            # Script to handle user logout
+├── dashboard.php         # Main dashboard, shows different content based on role
+│
+├── orders/
+│   ├── new.php           # Form to create a new order
+│   ├── my_orders.php     # Page for sales team to see their orders
+│   └── team_orders.php   # Page for managers to see their team's orders
+│
+├── users/
+│   ├── manage.php        # Page for managers to add/edit/delete users
+│
+├── includes/
+│   ├── db.php            # Establishes the database connection ($pdo)
+│   ├── functions.php     # Global helper functions (e.g., stock calculation)
+│   └── auth.php          # Checks if user is logged in (session management)
+│
+├── templates/
+│   ├── header.php        # Contains <head>, navigation, and opening <body> tag
+│   └── footer.php        # Contains closing tags and JS includes
+│
+└── assets/
+    ├── css/
+    │   └── style.css     # For custom CSS styles
+    └── js/
+        └── main.js       # For custom JavaScript
+
+6. High-Level Development Plan (Revised for PHP)
+Phase 1: Setup and Core Structure
+
+Database: Create the wholesale_db and its tables using the SQL script.
+
+Project Files: Create the folder and file structure as outlined above.
+
+Database Connection: Write the connection logic in includes/db.php.
+
+Templates: Create templates/header.php. Add the HTML boilerplate, a viewport meta tag for mobile, and the Tailwind CSS CDN link. Create templates/footer.php and include your assets/js/main.js script.
+
+Phase 2: Authentication and Sales Team Workflow
+
+Login/Logout: Build login.php with a form. The form post will validate user credentials against the database and start a PHP session. logout.php will destroy the session.
+
+Auth Check: Create includes/auth.php. This script will check for an active session and redirect to login.php if the user is not authenticated. You will require_once 'includes/auth.php'; at the top of every protected page.
+
+New Order Page: Build the form in orders/new.php. The form submission will be handled by PHP in the same file to calculate totals and save the order to the database.
+
+My Orders Page: Create orders/my_orders.php. It will fetch and display orders only for the logged-in user.
+
+Phase 3: Management Views and Logic
+
+Dashboard: Build dashboard.php. Use PHP if/else or switch statements based on the logged-in user's role ($_SESSION['user_role']) to display different information (e.g., personal stats for 'sales', team stats for 'manager').
+
+Team Orders: Build orders/team_orders.php. This page will contain more complex SQL queries to fetch orders for all users in a manager's hierarchy.
+
+User Management: Create users/manage.php. This page will be accessible only to users with the appropriate roles. It will allow them to view, add, and edit users who are below them in the hierarchy.
