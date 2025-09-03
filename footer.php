@@ -1,5 +1,5 @@
 <?php
-// templates/footer.php
+// footer.php
 ?>
         </main>
         <!-- End of Main Content Area -->
@@ -10,6 +10,6 @@
     </div> <!-- End of #app -->
 
     <!-- Your custom JavaScript file -->
-    <script src="/assets/js/main.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 </html>

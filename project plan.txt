@@ -1,21 +1,19 @@
-Project Plan: Simple Wholesale Management App (PHP & Tailwind CSS)
-This document outlines the complete plan, database structure, and file architecture for the mobile-first wholesale management web app using PHP, HTML, JavaScript, and Tailwind CSS.
+Revised Project Plan: Simple Wholesale Management App (Flat-File Structure)
+This document outlines the revised plan for the wholesale management app, prioritizing simplicity by placing all core PHP files in a single root folder to eliminate path-related issues.
 
-1. Core Technology Stack (Revised)
-Backend & Templating: PHP. It will handle all server-side logic, database interactions, and directly generate the HTML pages for the user's browser.
+1. Core Technology Stack
+This remains the same.
 
-Database: MySQL / MariaDB.
+Backend & Templating: PHP
 
-Styling: Tailwind CSS. We will use the CDN link in the header for simplicity, which makes setup instant. A style.css file can be used for any custom styles.
+Database: MySQL / MariaDB
 
-Client-side Scripting: Vanilla JavaScript. For front-end interactivity, form validation, and making asynchronous requests (AJAX) when a full page reload isn't necessary.
+Styling: Tailwind CSS (via CDN)
 
-This approach is known as a Multi-Page Application (MPA), where each distinct view is a separate .php file.
+Client-side Scripting: Vanilla JavaScript
 
-2. Database Structure (MySQL)
-(This structure remains unchanged as it is independent of the technology stack.)
-
-The database will be named wholesale_db. All inventory is stored in the smallest unit (pcs) to ensure accuracy.
+2. Database Structure
+This structure is correct and remains unchanged. You can use the same wholesale_db you already created.
 
 -- Table: users
 -- Stores login information and hierarchy for all staff.
@@ -65,83 +63,47 @@ CREATE TABLE orders (
 );
 
 3. User Roles, Hierarchy, & Permissions
-(This logic remains unchanged.)
+This logic is correct and remains unchanged.
 
-Super Admin (Role: owner): Full control.
+owner: Full control.
 
-Admin (Role: manager): Can manage supervisor, head, sales.
+manager: Manages supervisors, heads, sales.
 
-Supervisor (Role: supervisor): Can manage head, sales.
+supervisor: Manages heads, sales.
 
-Sales Team Head (Role: head): Can manage sales.
+head: Manages sales.
 
-Sales Team Member (Role: sales): Can only manage their own orders.
+sales: Manages own orders.
 
 4. Core Business Logic: Stock Calculation
-(This logic remains unchanged and will be implemented in PHP.)
+This logic is correct and remains unchanged.
 
 Constants: 1 Carton = 10 Pcs, 1 Crate = 50 Cartons = 500 Pcs.
 
-Order Creation Formula: total_pcs = (crates * 500) + (cartons * 10) + pcs.
+Formulas: Will be implemented in PHP as needed.
 
-Display Logic: Convert total pcs from the database back into Crates, Cartons, and Pcs for display.
+5. NEW: Simplified File Structure (All Files in Root)
+This is the core of the new plan. All .php files will be in the main project directory (cigmobile/). This makes including files extremely simple.
 
-5. Folder & File Structure (Revised for PHP)
-This structure merges the frontend and backend into a single project, which is typical for traditional PHP applications.
-
-/ (project root)
-├── login.php             # Login page
-├── logout.php            # Script to handle user logout
-├── dashboard.php         # Main dashboard, shows different content based on role
+/cigmobile/ (project root)
+├── index.php           # The new login page and app entry point.
+├── dashboard.php       # Main dashboard for logged-in users.
+├── logout.php          # Script to handle user logout.
 │
-├── orders/
-│   ├── new.php           # Form to create a new order
-│   ├── my_orders.php     # Page for sales team to see their orders
-│   └── team_orders.php   # Page for managers to see their team's orders
+├── db.php              # Establishes the database connection ($pdo).
+├── auth.php            # Security guard: checks if user is logged in.
+├── header.php          # Contains <head>, navigation, opening <body> tag.
+├── footer.php          # Contains closing tags and JS includes.
 │
-├── users/
-│   ├── manage.php        # Page for managers to add/edit/delete users
+├── order_new.php       # Form to create a new order.
+├── orders_my.php       # Page for sales team to see their own orders.
+├── orders_team.php     # Page for managers to see their team's orders.
 │
-├── includes/
-│   ├── db.php            # Establishes the database connection ($pdo)
-│   ├── functions.php     # Global helper functions (e.g., stock calculation)
-│   └── auth.php          # Checks if user is logged in (session management)
+├── users_manage.php    # Page for managers to add/edit/delete users.
+├── inventory_manage.php# Page for the owner to update stock levels.
 │
-├── templates/
-│   ├── header.php        # Contains <head>, navigation, and opening <body> tag
-│   └── footer.php        # Contains closing tags and JS includes
-│
-└── assets/
+└── assets/             # The only sub-folder.
     ├── css/
-    │   └── style.css     # For custom CSS styles
+    │   └── style.css   # For any custom CSS.
     └── js/
-        └── main.js       # For custom JavaScript
-
-6. High-Level Development Plan (Revised for PHP)
-Phase 1: Setup and Core Structure
-
-Database: Create the wholesale_db and its tables using the SQL script.
-
-Project Files: Create the folder and file structure as outlined above.
-
-Database Connection: Write the connection logic in includes/db.php.
-
-Templates: Create templates/header.php. Add the HTML boilerplate, a viewport meta tag for mobile, and the Tailwind CSS CDN link. Create templates/footer.php and include your assets/js/main.js script.
-
-Phase 2: Authentication and Sales Team Workflow
-
-Login/Logout: Build login.php with a form. The form post will validate user credentials against the database and start a PHP session. logout.php will destroy the session.
-
-Auth Check: Create includes/auth.php. This script will check for an active session and redirect to login.php if the user is not authenticated. You will require_once 'includes/auth.php'; at the top of every protected page.
-
-New Order Page: Build the form in orders/new.php. The form submission will be handled by PHP in the same file to calculate totals and save the order to the database.
-
-My Orders Page: Create orders/my_orders.php. It will fetch and display orders only for the logged-in user.
-
-Phase 3: Management Views and Logic
-
-Dashboard: Build dashboard.php. Use PHP if/else or switch statements based on the logged-in user's role ($_SESSION['user_role']) to display different information (e.g., personal stats for 'sales', team stats for 'manager').
-
-Team Orders: Build orders/team_orders.php. This page will contain more complex SQL queries to fetch orders for all users in a manager's hierarchy.
-
-User Management: Create users/manage.php. This page will be accessible only to users with the appropriate roles. It will allow them to view, add, and edit users who are below them in the hierarchy.
+        └── main.js     # For any custom JavaScript.
