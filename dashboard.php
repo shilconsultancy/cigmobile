@@ -20,11 +20,12 @@ $user_name = $_SESSION['user_full_name'] ?? 'User';
     
     <div class="border-t pt-6">
         <h2 class="text-lg sm:text-xl font-bold mb-4">Your Actions</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <a href="order_new.php" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-center">Create New Order</a>
-            
-            <!-- NEW CRM BUTTON FOR ALL USERS -->
             <a href="customers_manage.php" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg text-center">Manage Customers</a>
+            
+            <!-- NEW: Due Payments Button for all users -->
+            <a href="reports_due.php" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-center">Due Payments</a>
 
             <?php if ($user_role === 'sales'): ?>
                 <a href="orders_my.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-center">View My Orders</a>
@@ -43,6 +44,4 @@ $user_name = $_SESSION['user_full_name'] ?? 'User';
     </div>
 </div>
 
-<?php
-require_once 'footer.php';
-?>
+<?php require_once 'footer.php'; ?>
