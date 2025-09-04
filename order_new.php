@@ -14,7 +14,6 @@ $show_success_modal = false;
 $products_with_inventory = [];
 
 try {
-    // Fetch all products and their TOTAL available stock for the dropdown.
     $stmt = $pdo->query(
         "SELECT p.id, p.name, p.price_per_pc, COALESCE(SUM(ib.quantity_pcs), 0) as total_stock_pcs
          FROM products p
@@ -23,7 +22,6 @@ try {
          ORDER BY p.name ASC"
     );
     $products_with_inventory = $stmt->fetchAll();
-
 } catch (PDOException $e) {
     die("A database error occurred while loading page data.");
 }
@@ -32,16 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customer_name = trim($_POST['customer_name']);
     $customer_phone = trim($_POST['customer_phone']);
     $order_products = $_POST['products'] ?? [];
-
     if (empty($customer_name)) {
         $error_message = 'Customer name is required.';
     } elseif (empty($order_products)) {
         $error_message = 'You must add at least one product to the order.';
     } else {
-        $pdo->beginTransaction(); // START THE CRITICAL TRANSACTION
+        $pdo->beginTransaction();
         try {
             $grand_total_pcs_in_order = 0;
-
             foreach ($order_products as $item) {
                 if (empty($item['id'])) continue;
                 $product_id = (int)$item['id'];
@@ -99,7 +95,6 @@ require_once 'header.php';
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Create New Order</h1>
         <a href="dashboard.php" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">&larr; Back to Dashboard</a>
     </div>
-
     <?php if (!empty($error_message)): ?>
     <div class="mb-6 flex items-center gap-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><div><p class="font-bold">Error</p><p><?php echo htmlspecialchars($error_message); ?></p></div></div>
     <?php endif; ?>
@@ -122,7 +117,7 @@ require_once 'header.php';
         <div class="pt-8 border-t">
             <div class="bg-slate-50 p-4 rounded-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Grand Total Summary</h3>
-                <div class="flex justify-between items-center mb-2"><span class="text-gray-600">Total Pieces:</span><span id="grand-total-pcs" class="font-bold text-xl text-gray-900">0</span></div>
+                <div class="flex justify-between items-center mb-2"><span class="text-gray-600">Total Packets:</span><span id="grand-total-pcs" class="font-bold text-xl text-gray-900">0</span></div>
                 <div class="flex justify-between items-center border-t pt-2 mt-2"><span class="text-gray-600 font-semibold">Total Amount:</span><span id="grand-total-amount" class="font-bold text-2xl text-green-600">৳0.00</span></div>
             </div>
             <div class="mt-6">
@@ -146,7 +141,7 @@ require_once 'header.php';
             div.setAttribute('data-index', rowIndex);
             let optionsHtml = '<option value="">-- Select Product --</option>';
             productsData.forEach(p => { optionsHtml += `<option value="${p.id}">${p.name}</option>`; });
-            div.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-12 gap-x-4 gap-y-2 items-end"><div class="md:col-span-4"><label class="block text-sm font-medium text-gray-700">Product</label><select name="products[${rowIndex}][id]" class="product-select mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm">${optionsHtml}</select><div class="stock-display text-xs text-gray-500 mt-1" style="display: none;"></div></div><div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">Quantity</label><input type="number" name="products[${rowIndex}][quantity]" min="0" placeholder="0" class="recalc-input mt-1 block w-full text-center py-2 px-2 border border-gray-300 rounded-md"></div><div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">Unit</label><select name="products[${rowIndex}][unit]" class="recalc-input mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md"><option value="pcs">Pcs</option><option value="cartons">Cartons</option><option value="crates">Crates</option></select></div><div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">Price/Pc</label><input type="number" step="0.01" min="0.01" name="products[${rowIndex}][price]" class="recalc-input selling-price-input mt-1 block w-full text-center py-2 px-2 border border-gray-300 rounded-md"></div><div class="md:col-span-2 text-right"><button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-medium">Remove</button></div></div>`;
+            div.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-12 gap-x-4 gap-y-2 items-end"><div class="md:col-span-4"><label class="block text-sm font-medium text-gray-700">Product</label><select name="products[${rowIndex}][id]" class="product-select mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm">${optionsHtml}</select><div class="stock-display text-xs text-gray-500 mt-1" style="display: none;"></div></div><div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">Quantity</label><input type="number" name="products[${rowIndex}][quantity]" min="0" placeholder="0" class="recalc-input mt-1 block w-full text-center py-2 px-2 border border-gray-300 rounded-md"></div><div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">Unit</label><select name="products[${rowIndex}][unit]" class="recalc-input mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md"><option value="pcs">Packets</option><option value="cartons">Cartons</option><option value="crates">Crates</option></select></div><div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">Price/Packet</label><input type="number" step="0.01" min="0.01" name="products[${rowIndex}][price]" class="recalc-input selling-price-input mt-1 block w-full text-center py-2 px-2 border border-gray-300 rounded-md"></div><div class="md:col-span-2 text-right"><button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-medium">Remove</button></div></div>`;
             container.appendChild(div);
         }
         addProductBtn.addEventListener('click', createProductRow);
@@ -159,7 +154,7 @@ require_once 'header.php';
                 const selectedProductId = parseInt(e.target.value);
                 const selectedProduct = productsData.find(p => p.id === selectedProductId);
                 if (selectedProduct) {
-                    stockDisplay.textContent = `Stock: ${parseInt(selectedProduct.total_stock_pcs).toLocaleString()} pcs`;
+                    stockDisplay.textContent = `Stock: ${parseInt(selectedProduct.total_stock_pcs).toLocaleString()} Packets`;
                     stockDisplay.style.display = 'block';
                     priceInput.value = parseFloat(selectedProduct.price_per_pc).toFixed(2);
                 } else {
@@ -209,7 +204,6 @@ require_once 'header.php';
     });
 </script>
 <?php endif; ?>
-
 <?php
 require_once 'footer.php';
 ?>

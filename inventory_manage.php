@@ -1,27 +1,22 @@
 <?php
 // inventory_manage.php
 
-// --- PHP ERROR REPORTING (for debugging) ---
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-// -------------------------------------------
 
 require_once 'auth.php';
 require_once 'db.php';
 
-// --- Authorization Check ---
 if ($_SESSION['user_role'] !== 'owner') {
     die("Access Denied. You do not have permission to view this page.");
 }
 
-// Initialize variables
 $error_message = '';
 $success_message = '';
 $categories = [];
 $products_with_stock = [];
 
-// --- Helper Function ---
 function convertPcsToUnits($total_pcs) {
     if ($total_pcs === null) return ['crates' => 0, 'cartons' => 0, 'pcs' => 0];
     $crates = floor($total_pcs / 500);
@@ -31,7 +26,6 @@ function convertPcsToUnits($total_pcs) {
     return ['crates' => $crates, 'cartons' => $cartons, 'pcs' => $pcs];
 }
 
-// --- FORM HANDLING ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_new_product'])) {
         $new_product_name = trim($_POST['new_product_name']);
@@ -64,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $pdo->commit();
                     $success_message = "Successfully created new product '".htmlspecialchars($new_product_name)."'";
-                    if ($total_initial_stock > 0) { $success_message .= " with an initial stock of ".number_format($total_initial_stock)." pieces."; }
+                    if ($total_initial_stock > 0) { $success_message .= " with an initial stock of ".number_format($total_initial_stock)." packets."; }
                 } catch (Exception $e) { $pdo->rollBack(); $error_message = "Error: " . $e->getMessage(); }
             }
         }
@@ -86,14 +80,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $stmt = $pdo->prepare("INSERT INTO inventory_batches (product_id, quantity_pcs, cost_per_pc, purchase_date) VALUES (?, ?, ?, ?)");
                     $stmt->execute([$product_id, $total_pcs_to_add, $batch_cost_per_pc, $purchase_date]);
-                    $success_message = "Successfully added a new batch of " . number_format($total_pcs_to_add) . " pieces.";
+                    $success_message = "Successfully added a new batch of " . number_format($total_pcs_to_add) . " packets.";
                 } catch (PDOException $e) { $error_message = 'A database error occurred while adding the new stock batch.'; }
             }
         }
     }
 }
 
-// --- Fetch data for display ---
 try {
     $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
     $products_with_stock = $pdo->query(
@@ -120,7 +113,6 @@ require_once 'header.php';
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Product & Inventory Management</h1>
         <a href="dashboard.php" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">&larr; Back to Dashboard</a>
     </div>
-
     <?php if (!empty($error_message)): ?>
     <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert"><p class="font-bold">Error</p><p><?php echo htmlspecialchars($error_message); ?></p></div>
     <?php endif; ?>
@@ -135,18 +127,18 @@ require_once 'header.php';
                 <input type="text" name="new_product_name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="New Product Name">
                 <select name="category_id" required class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm"><option value="">Select Category</option><?php foreach ($categories as $cat): ?><option value="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option><?php endforeach; ?></select>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" name="price_per_pc" step="0.01" min="0.01" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Selling Price/Pc (৳)">
-                    <input type="number" name="default_cost_per_pc" step="0.01" min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Default Cost/Pc (৳)">
+                    <input type="number" name="price_per_pc" step="0.01" min="0.01" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Selling Price/Packet (৳)">
+                    <input type="number" name="default_cost_per_pc" step="0.01" min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Default Cost/Packet (৳)">
                 </div>
                 <p class="text-sm font-medium text-gray-700 pt-2 border-t">Initial Stock Batch (Optional)</p>
                 <div class="grid grid-cols-2 gap-4">
                     <input type="date" name="purchase_date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                    <input type="number" name="batch_cost_per_pc" step="0.01" min="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Batch Cost/Pc (৳)">
+                    <input type="number" name="batch_cost_per_pc" step="0.01" min="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Batch Cost/Packet (৳)">
                 </div>
                 <div class="grid grid-cols-3 gap-4">
                     <input type="number" name="crates" min="0" placeholder="Crates" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
                     <input type="number" name="cartons" min="0" placeholder="Cartons" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
-                    <input type="number" name="pcs" min="0" placeholder="Pcs" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
+                    <input type="number" name="pcs" min="0" placeholder="Packets" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
                 </div>
                 <button type="submit" name="add_new_product" class="w-full justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">Create Product</button>
             </form>
@@ -157,19 +149,18 @@ require_once 'header.php';
                 <select name="product_id" required class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm"><option value="">Select Existing Product</option><?php foreach ($products_with_stock as $prod): ?><option value="<?php echo $prod['id']; ?>"><?php echo htmlspecialchars($prod['name']); ?></option><?php endforeach; ?></select>
                  <div class="grid grid-cols-2 gap-4">
                     <input type="date" name="purchase_date" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                    <input type="number" name="batch_cost_per_pc" step="0.01" min="0.01" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Batch Cost/Pc (৳)">
+                    <input type="number" name="batch_cost_per_pc" step="0.01" min="0.01" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Batch Cost/Packet (৳)">
                 </div>
                 <p class="text-sm font-medium text-gray-700">Stock Quantity to Add</p>
                 <div class="grid grid-cols-3 gap-4">
                     <input type="number" name="crates" min="0" placeholder="Crates" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
                     <input type="number" name="cartons" min="0" placeholder="Cartons" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
-                    <input type="number" name="pcs" min="0" placeholder="Pcs" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
+                    <input type="number" name="pcs" min="0" placeholder="Packets" class="block w-full text-center px-2 py-2 border border-gray-300 rounded-md">
                 </div>
                 <button type="submit" name="add_existing_stock" class="w-full justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Add Stock Batch</button>
             </form>
         </div>
     </div>
-
     <div class="pt-8">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
             <h2 class="text-xl font-semibold text-gray-800">Inventory Summary</h2>
@@ -185,7 +176,7 @@ require_once 'header.php';
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Purchase Value</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Selling Value</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Stock (Pcs)</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Stock (Packets)</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="inventory-table-body">
@@ -206,12 +197,10 @@ require_once 'header.php';
         </div>
     </div>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('product-search-input');
-    const tableBody = document.getElementById('inventory-table-body');
-    const tableRows = tableBody.getElementsByClassName('product-row-searchable');
+    const tableRows = document.getElementById('inventory-table-body').getElementsByClassName('product-row-searchable');
     let debounceTimer;
     function debounce(func, delay) {
         return function(...args) {
@@ -235,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('input', debouncedFilter);
 });
 </script>
-
 <?php
 require_once 'footer.php';
 ?>
