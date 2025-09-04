@@ -1,14 +1,12 @@
 <?php
 // dashboard.php
 
-// This is a protected page.
 require_once 'auth.php';
 require_once 'db.php';
 
 $page_title = 'Dashboard';
 require_once 'header.php';
 
-// Use the null coalescing operator (??) to prevent deprecation warnings.
 $user_role = $_SESSION['user_role'] ?? 'guest';
 $user_name = $_SESSION['user_full_name'] ?? 'User';
 ?>
@@ -23,27 +21,24 @@ $user_name = $_SESSION['user_full_name'] ?? 'User';
     <div class="border-t pt-6">
         <h2 class="text-lg sm:text-xl font-bold mb-4">Your Actions</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <a href="order_new.php" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-center">Create New Order</a>
+            
+            <!-- NEW CRM BUTTON FOR ALL USERS -->
+            <a href="customers_manage.php" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg text-center">Manage Customers</a>
 
-            <?php // --- Action for ALL logged-in users --- ?>
-            <a href="order_new.php" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300">Create New Order</a>
-
-            <?php // --- Action for 'sales' role ONLY --- ?>
             <?php if ($user_role === 'sales'): ?>
-                <a href="orders_my.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300">View My Orders</a>
+                <a href="orders_my.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-center">View My Orders</a>
             <?php endif; ?>
 
-            <?php // --- Actions for Management roles --- ?>
             <?php if (in_array($user_role, ['sales_head', 'supervisor', 'manager', 'owner'])): ?>
-                <a href="reports_team.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300">Team Reports</a>
-                <a href="users_manage.php" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300">Manage Users</a>
+                <a href="reports_team.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-center">Team Reports</a>
+                <a href="users_manage.php" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg text-center">Manage Users</a>
             <?php endif; ?>
 
-            <?php // --- Actions for Owner ONLY --- ?>
             <?php if ($user_role === 'owner'): ?>
-                <a href="categories_manage.php" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300">Manage Categories</a>
-                <a href="inventory_manage.php" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-lg text-center transition duration-300">Manage Products & Inventory</a>
+                <a href="categories_manage.php" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-center">Manage Categories</a>
+                <a href="inventory_manage.php" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-lg text-center">Products & Inventory</a>
             <?php endif; ?>
-
         </div>
     </div>
 </div>
