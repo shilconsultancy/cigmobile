@@ -1,57 +1,40 @@
 <?php
 // orders_team.php
 
-// --- PHP ERROR REPORTING (for debugging) ---
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-// -------------------------------------------
 
-// This is a protected page.
 require_once 'auth.php';
 require_once 'db.php';
 
-// --- Authorization Check ---
-// UPDATED: Changed 'head' to 'sales_head'
 $allowed_roles = ['sales_head', 'supervisor', 'manager', 'owner'];
 if (!in_array($_SESSION['user_role'], $allowed_roles)) {
     die("Access Denied. You do not have permission to view this page.");
 }
 
-// Initialize variables.
 $orders = [];
 $team_member_ids = [];
 $logged_in_user_id = $_SESSION['user_id'];
 
 try {
-    // --- Step 1: Find all subordinate user IDs ---
     $ids_to_check = [$logged_in_user_id];
     $all_subordinate_ids = [];
-
     while (!empty($ids_to_check)) {
         $placeholders = rtrim(str_repeat('?,', count($ids_to_check)), ',');
         $stmt = $pdo->prepare("SELECT id FROM users WHERE reports_to IN ($placeholders)");
         $stmt->execute($ids_to_check);
         $subordinates = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
         if (!empty($subordinates)) {
             $all_subordinate_ids = array_merge($all_subordinate_ids, $subordinates);
             $ids_to_check = $subordinates;
-        } else {
-            $ids_to_check = [];
-        }
+        } else { $ids_to_check = []; }
     }
-    
     $team_member_ids = array_merge([$logged_in_user_id], $all_subordinate_ids);
-    
-    // --- Step 2: Fetch all orders made by these team members ---
     if (!empty($team_member_ids)) {
         $placeholders = rtrim(str_repeat('?,', count($team_member_ids)), ',');
-        
         $stmt = $pdo->prepare(
-            "SELECT
-                o.id, o.order_date, o.customer_name, p.name AS product_name,
-                u.full_name AS salesperson_name, o.total_pcs, o.total_amount, o.status
+            "SELECT o.id, o.order_date, o.customer_name, p.name AS product_name, u.full_name AS salesperson_name, o.total_pcs, o.total_amount, o.status
              FROM orders o
              JOIN products p ON o.product_id = p.id
              JOIN users u ON o.user_id = u.id
@@ -61,9 +44,7 @@ try {
         $stmt->execute($team_member_ids);
         $orders = $stmt->fetchAll();
     }
-
 } catch (PDOException $e) {
-    error_log("Team Orders Page Error: " . $e->getMessage());
     die("A database error occurred. Please try again later.");
 }
 
@@ -76,7 +57,6 @@ require_once 'header.php';
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Team Order History</h1>
         <a href="dashboard.php" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">&larr; Back to Dashboard</a>
     </div>
-
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -103,7 +83,7 @@ require_once 'header.php';
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800"><?php echo htmlspecialchars($order['customer_name']); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><?php echo htmlspecialchars($order['product_name']); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-semibold"><?php echo number_format($order['total_pcs']); ?></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-700 text-right font-bold">$<?php echo number_format($order['total_amount'], 2); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-700 text-right font-bold">৳<?php echo number_format($order['total_amount'], 2); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <?php
                                     $status_color = 'bg-gray-100 text-gray-800';

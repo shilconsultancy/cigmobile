@@ -1,0 +1,21 @@
+/* assets/css/style.css */
+
+/*
+ This is the base style for our searchable table rows.
+ We set a transition on the opacity property, which will
+ animate any changes to it over 0.3 seconds.
+*/
+.product-row-searchable {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/*
+ This is the class we will add with JavaScript when we want to hide a row.
+ Instead of setting 'display: none' (which causes the jump),
+ we just make it invisible. It still takes up space in the table,
+ preventing any layout shifts. pointer-events: none makes it unclickable.
+*/
+.hidden-row {
+    opacity: 0;
+    pointer-events: none;
+}
