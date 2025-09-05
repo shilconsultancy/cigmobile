@@ -33,37 +33,21 @@ $team_members = [];
 $potential_managers = [];
 $manager_accessible_categories = [];
 
-// --- FORM HANDLING (remains the same as before) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // This section requires the $manager_accessible_categories to be fetched first,
-    // so we will fetch it before this block. See below.
-}
-
 // --- Fetch data required for the page ---
 try {
-    // --- THIS IS THE CRITICAL CHANGE ---
-    // If the user is the owner, they can see and assign ALL categories.
-    // Otherwise, they can only see and assign the categories they have access to.
     if ($current_user_role === 'owner') {
         $cat_stmt = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC");
         $manager_accessible_categories = $cat_stmt->fetchAll();
     } else {
-        $cat_stmt = $pdo->prepare(
-            "SELECT c.id, c.name FROM categories c
-             JOIN user_category_access uca ON c.id = uca.category_id
-             WHERE uca.user_id = ? ORDER BY c.name ASC"
-        );
+        $cat_stmt = $pdo->prepare("SELECT c.id, c.name FROM categories c JOIN user_category_access uca ON c.id = uca.category_id WHERE uca.user_id = ? ORDER BY c.name ASC");
         $cat_stmt->execute([$current_user_id]);
         $manager_accessible_categories = $cat_stmt->fetchAll();
     }
-    // ------------------------------------
-
-    // Fetch potential managers for the "Reports To" dropdown
+    
     $manager_stmt = $pdo->prepare("SELECT id, full_name, role FROM users WHERE role IN ('owner', 'manager', 'supervisor', 'sales_head') ORDER BY full_name");
     $manager_stmt->execute();
     $potential_managers = $manager_stmt->fetchAll();
     
-    // Fetch all subordinates of the current user to display in the list.
     $ids_to_check = [$current_user_id];
     $all_subordinate_ids = [];
     while (!empty($ids_to_check)) {
@@ -97,7 +81,7 @@ try {
 
 } catch (PDOException $e) { die("A database error occurred while loading user data."); }
 
-// Process form submissions now that we have the necessary data
+// Process form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdo->beginTransaction();
     try {
@@ -147,7 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success_message = 'User deleted successfully!';
         }
         $pdo->commit();
-        // Redirect to self to prevent form resubmission and show fresh data
         header("Location: users_manage.php?success=" . urlencode($success_message));
         exit;
     } catch (Exception $e) {
@@ -155,7 +138,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = $e->getMessage();
     }
 }
-// Check for success message in GET param
 if(isset($_GET['success'])) {
     $success_message = $_GET['success'];
 }
@@ -198,7 +180,7 @@ require_once 'header.php';
                     <?php if (empty($team_members)): ?><tr><td colspan="4" class="px-6 py-12 text-center text-gray-500">You have no team members reporting to you.</td></tr>
                     <?php else: ?><?php foreach ($team_members as $user): ?>
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo htmlspecialchars($user['full_name']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><a href="user_profile.php?id=<?php echo $user['id']; ?>" class="text-indigo-600 hover:underline"><?php echo htmlspecialchars($user['full_name']); ?></a></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"><?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($user['role']))); ?></span></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><?php echo htmlspecialchars($user['accessible_categories'] ?? 'None'); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
